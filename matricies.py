@@ -1,3 +1,6 @@
+import copy
+
+
 def transpose(matrix):
     # найдём число строк матрицы
     rows = len(matrix)
@@ -30,13 +33,53 @@ def determinant(matrix):
             for j in range(len(matrix[0])):
                 # формируем минор элемента
                 m_ij = [[matrix[n][k] for k in range(len(matrix[0])) if k != j] for n in range(len(matrix[0])) if n != 0]
-                print(m_ij)
                 # вычисляем алгебраическое дополнение
                 a_ij = matrix[0][j] * (-1) ** (0 + j)
-                print(a_ij)
                 # считаем детерминант, если n > 3 - привет, рекурсия
                 det += a_ij * determinant(m_ij)
             return det
     else:
+        print("Матрица не является квадратной")
         return None
 
+
+def rowsub(row_1, row_2):
+    # вычитает из списка 1 список 2, возвращает результат вычитания
+    row = []
+    for i in range(len(row_1)):
+        row.append(row_1[i] - row_2[i])
+    return row
+
+
+def rowmult(row, mult):
+    # умножает список на число, возвращает умноженный список
+    # приходится создавать глубокую копию строки, потому что
+    # в противном случае она модифицирцется в функции
+    new_row = copy.deepcopy(row)
+    for i in range(len(new_row)):
+        new_row[i] *= mult
+    return new_row
+
+
+def slau_gaus(left_part_matrix, right_part):
+    # проверяем совместна ли система, вычисляя детерминант левой части
+    if determinant(left_part_matrix) != 0:
+        # создаём дополненную матрицу
+        matrix = []
+        for i in range(len(left_part_matrix)):
+            row = left_part_matrix[i]
+            row.append(right_part[i])
+            matrix.append(row)
+        # начнаем прямую прогонку
+        # итерируя по столбцам
+        for j in range(len(matrix) - 1):
+            # итерируем по строкам, не беря в рассмотрение последнюю
+            for i in range(j, len(matrix) - 1):
+                multiplier = matrix[i+1][j] / matrix[j][j]
+                matrix[i+1] = rowsub(matrix[i+1], rowmult(matrix[j], multiplier))
+                for row in matrix:
+                    print(row)
+        return matrix
+    else:
+        print("Система несовместна")
+        return None
