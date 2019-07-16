@@ -35,8 +35,12 @@ def determinant(matrix):
                 m_ij = [[matrix[n][k] for k in range(len(matrix[0])) if k != j] for n in range(len(matrix[0])) if n != 0]
                 # вычисляем алгебраическое дополнение
                 a_ij = matrix[0][j] * (-1) ** (0 + j)
-                # считаем детерминант, если n > 3 - привет, рекурсия
-                det += a_ij * determinant(m_ij)
+                if a_ij == 0:
+                    det = 0
+                else:
+                    # считаем детерминант, если минор элемента > 3 - привет, рекурсия
+                    det += a_ij * determinant(m_ij)
+                    # print(det)
             return det
     else:
         print("Матрица не является квадратной")
@@ -63,23 +67,42 @@ def rowmult(row, mult):
 
 def slau_gaus(left_part_matrix, right_part):
     # проверяем совместна ли система, вычисляя детерминант левой части
-    if determinant(left_part_matrix) != 0:
-        # создаём дополненную матрицу
-        matrix = []
-        for i in range(len(left_part_matrix)):
-            row = left_part_matrix[i]
-            row.append(right_part[i])
-            matrix.append(row)
-        # начнаем прямую прогонку
-        # итерируя по столбцам
-        for j in range(len(matrix) - 1):
-            # итерируем по строкам, не беря в рассмотрение последнюю
-            for i in range(j, len(matrix) - 1):
+    #if determinant(left_part_matrix) != 0:
+    # создаём дополненную матрицу
+    matrix = []
+    for i in range(len(left_part_matrix)):
+        row = left_part_matrix[i]
+        row.append(right_part[i])
+        matrix.append(row)
+    # начнаем прямую прогонку
+    # итерируя по столбцам
+    for j in range(len(matrix) - 1):
+        # итерируем по строкам, не беря в рассмотрение последнюю
+        for i in range(j, len(matrix) - 1):
+            if matrix[i+1][j] == 0:
+                continue
+            else:
                 multiplier = matrix[i+1][j] / matrix[j][j]
                 matrix[i+1] = rowsub(matrix[i+1], rowmult(matrix[j], multiplier))
-                for row in matrix:
-                    print(row)
-        return matrix
-    else:
-        print("Система несовместна")
-        return None
+
+    # начинаем обратную прогонку
+    # начинаем с последней строки матрицы
+    for j in range(len(matrix) - 1, 0, -1):
+        # начинаем с последнего столбца
+        for i in range(j, 0, -1):
+            if matrix[i-1][j] == 0:
+                continue
+            else:
+                multiplier = matrix[i-1][j] / matrix[j][j]
+                matrix[i-1] = rowsub(matrix[i-1], rowmult(matrix[j], multiplier))
+
+    # тепер вычислим вектор - столбец неизвестных unknow
+    unknow = []
+    for i in range(len(matrix)):
+        for j in range(len(matrix)):
+            if i == j:
+                unknow.append(matrix[i][-1] / matrix[i][j])
+    return unknow
+    """else:
+        print("Система уравнений несовместна")
+        return None"""
