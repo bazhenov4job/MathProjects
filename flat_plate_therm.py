@@ -11,7 +11,7 @@ t_init = 293 # К
 
 # Задаём плотность тепловых потоков
 q_l = 2 * 10 ** 4 # Вт/ м2
-q_p = 2 * 10 ** 4
+q_p = 4 * 10 ** 4
 
 # Задаём длину пластины, m. Шаг разбиения
 l = 0.1
@@ -45,7 +45,7 @@ free_coef[n-1][n-1] = 2 * fo + 1
 
 # Вычисляем распределение на новом временном шаге
 i = 0
-while tau > d_tau * i:
+while tau >= d_tau * i:
     new_temp = slau_gaus(free_coef, temps)
     temps = new_temp
     temps[0] += 2 * q_l * d_tau / (ro * c * l / (n-1))

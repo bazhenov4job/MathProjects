@@ -67,11 +67,11 @@ def rowmult(row, mult):
 
 def slau_gaus(left_part_matrix, right_part):
     # проверяем совместна ли система, вычисляя детерминант левой части
-    #if determinant(left_part_matrix) != 0:
+    # if determinant(left_part_matrix) != 0:
     # создаём дополненную матрицу
     matrix = []
     for i in range(len(left_part_matrix)):
-        row = left_part_matrix[i]
+        row = copy.deepcopy(left_part_matrix[i])
         row.append(right_part[i])
         matrix.append(row)
     # начнаем прямую прогонку
@@ -95,7 +95,15 @@ def slau_gaus(left_part_matrix, right_part):
             else:
                 multiplier = matrix[i-1][j] / matrix[j][j]
                 matrix[i-1] = rowsub(matrix[i-1], rowmult(matrix[j], multiplier))
-
+    """for row in matrix:
+        result = open("result.txt", "a")
+        string_list = []
+        for element in row:
+            string_list.append(str(element))
+        results = '\t'.join(string_list)
+        results += '\n'
+        result.write(results)
+        result.close()"""
     # тепер вычислим вектор - столбец неизвестных unknow
     unknow = []
     for i in range(len(matrix)):
