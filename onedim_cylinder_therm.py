@@ -13,8 +13,8 @@ lam = 400 # Вт/ м*К
 t_init = 293 # К
 
 # Задаём плотность тепловых потоков
-q_l = 2 * 10 ** 4 # Вт/ м2
-q_p = 4 * 10 ** 4
+q_l = 4 * 10 ** 4 # Вт/ м2
+q_p = 0 * 10 ** 4
 
 # Задаём начальный радиус, конечный радиус, число слоёв разбиения
 r_init = 0.05
@@ -24,7 +24,7 @@ n = 51
 del_r = (r_final - r_init) / (n-1)
 
 # Задаём временной диапазон вычисления, сек
-tau = 10
+tau = 10000
 d_tau = 1
 
 # Начальное распределение
@@ -57,9 +57,9 @@ i = 0
 while tau >= d_tau * i:
     new_temp = slau_gaus(free_coef, temps)
     temps = new_temp
-    temps[0] += 2 * q_l * d_tau / (ro * c * l / (n-1))
+    temps[0] += 2 * q_l * r_init * d_tau / (ro * c * del_r)
     if temps[n-1] > 77.6:
-        temps[n - 1] -= 2 * q_p * d_tau / (ro * c * l / (n-1))
+        temps[n - 1] -= 2 * q_p * r_final * d_tau / (ro * c * del_r)
     else:
         temps[n - 1] = 77.6
     if i % 10 == 0:
