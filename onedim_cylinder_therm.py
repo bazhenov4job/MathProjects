@@ -13,12 +13,12 @@ lam = 400 # Вт/ м*К
 t_init = 293 # К
 
 # Задаём плотность тепловых потоков
-q_l = 4 * 10 ** 4 # Вт/ м2
-q_p = 0 * 10 ** 4
+q_l = 2 * 10 ** 4 # Вт/ м2
+q_p = 2 * 10 ** 4
 
 # Задаём начальный радиус, конечный радиус, число слоёв разбиения
 r_init = 0.05
-r_final = 0.1
+r_final = 0.2
 n = 51
 # находим приращение радиуса
 del_r = (r_final - r_init) / (n-1)
@@ -29,8 +29,6 @@ d_tau = 1
 
 # Начальное распределение
 temps = [t_init for i in range(n)]
-temps[0] += 2 * q_l * r_init * d_tau / (ro * c * del_r)
-temps[n - 1] -= 2 * q_p * r_final * d_tau / (ro * c * del_r)
 
 # Вычисляем основную часть "критерия Фурье"
 fo = d_tau * lam / (ro * c * del_r)
@@ -55,13 +53,10 @@ free_coef[n-1][n-1] = 2 * fo / log1p(r_final / (r_final - del_r)) + 1
 # Вычисляем распределение на новом временном шаге
 i = 0
 while tau >= d_tau * i:
+    temps[0] += 2 * q_l * r_init * d_tau / (ro * c * del_r)
+    temps[n - 1] -= 2 * q_p * r_final * d_tau / (ro * c * del_r)
     new_temp = slau_gaus(free_coef, temps)
     temps = new_temp
-    temps[0] += 2 * q_l * r_init * d_tau / (ro * c * del_r)
-    if temps[n-1] > 77.6:
-        temps[n - 1] -= 2 * q_p * r_final * d_tau / (ro * c * del_r)
-    else:
-        temps[n - 1] = 77.6
     if i % 10 == 0:
         result = open("result.txt", "a")
         string_list = []

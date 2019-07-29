@@ -23,8 +23,6 @@ d_tau = 1
 
 # Начальное распределение
 temps = [t_init for i in range(n)]
-temps[0] += 2 * q_l * d_tau / (ro * c * l / (n-1))
-temps[n - 1] -= 2 * q_p * d_tau / (ro * c * l / (n-1))
 
 # Вычисляем критерий Фурье
 fo = d_tau * lam / (ro * c * (l / n) ** 2)
@@ -46,13 +44,10 @@ free_coef[n-1][n-1] = 2 * fo + 1
 # Вычисляем распределение на новом временном шаге
 i = 0
 while tau >= d_tau * i:
+    temps[0] += 2 * q_l * d_tau / (ro * c * l / (n - 1))
+    temps[n - 1] -= 2 * q_p * d_tau / (ro * c * l / (n - 1))
     new_temp = slau_gaus(free_coef, temps)
     temps = new_temp
-    temps[0] += 2 * q_l * d_tau / (ro * c * l / (n-1))
-    if temps[n-1] > 77.6:
-        temps[n - 1] -= 2 * q_p * d_tau / (ro * c * l / (n-1))
-    else:
-        temps[n - 1] = 77.6
     if i % 10 == 0:
         result = open("result.txt", "a")
         string_list = []
