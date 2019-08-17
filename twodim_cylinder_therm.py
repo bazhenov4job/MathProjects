@@ -1,3 +1,6 @@
+from matricies import slau_gaus
+from math import log1p
+
 """Скрипт для вычисления поля температур цилиндрической двухмерной шайбы
 путём численного решения дифференциального уравнения теплопроводности для
 двухмерного случая.
@@ -5,7 +8,7 @@
 |\  \  \  \  \  \  \  \  \  \Cu\  \  \  \  \  \  \  \  \  \  \  \  |
 | \  \  \  \  \  \  \  \  \  \Cu\  \  \  \  \  \  \  \  \  \  \  \ |
 |  \  \  \  \  \  \  \  \  \  \Cu\  \  \  \  \  \  \  \  \  \  \  \|
-|_________________ \  \  \  \  \Cu\  \  \  \  \  \  \  \  \  \  \  |
+|___\__\__\__\__\_ \  \  \  \  \Cu\  \  \  \  \  \  \  \  \  \  \  |
 |\/ \/ \/F\/ \/ \/| \  \  \  \  \Cu\  \  \  \  \  \  \  \  \  \  \ |
 |/\ /\ /\F/\ /\ /\|  \  \  \  \  \Cu\  \  \  \  \  \  \  \  \  \  \|
  |↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓||                     |↑  ↑  ↑  ↑  ↑  ↑|          |
@@ -28,20 +31,23 @@ Q_heat - тепловой поток приносится нагревателе
 """
 """Автор Баженов Вадим, email: bazhenov4job@gmail.com"""
 
-from matricies import slau_gaus
-from math import log1p
-
 
 # Задаём теплофизические свойства материалов
 # Медь
 c_Cu = 400  # Дж/ кг*К
 ro_Cu = 8930  # кг/ м3
 lam_Cu = 400  # Вт/ м*К
+
+a_Cu = lam_Cu / (ro_Cu * c_Cu)
+
 # Фторопласт
 c_F = 970  # Дж/ кг*К
 ro_F = 2200  # кг/ м3
 lam_F = 0.25  # Вт/ м*К
 
+a_F = lam_F / (ro_F * c_F)
+
+alfa = 400  #Вт/ м2*к
 t_init = 293  # К
 
 # Задаём плотность тепловых потоков
@@ -58,25 +64,33 @@ x_final = 0.01
 # находим максимальный индекс узла на слое (узлов всего на слое: n + 1)
 n = r_final / del_r
 m = x_final / del_x
+# Всего узлов в модели
+nodes = (m + 1) * (n + 1)
+r_n = n + 1  # Переход на новый слой по х
 
 # Задаём временной диапазон вычисления, сек
 tau = 10000
 d_tau = 1
 
 # Начальное распределение
-temps = [t_init for i in range(n)]
+temps = [t_init for i in range(nodes)]
 
-"""
-Continue from this point
-"""
+
 
 # Вычисляем основную часть "критерия Фурье"
 fo = d_tau * lam / (ro * c * del_r)
 
 # Создаём матрицу левой части
-free_coef = [[0 for i in range(n)] for i in range(n)]
+free_coef = [[0 for i in range(nodes)] for i in range(nodes)]
 
-free_coef[0][0] = (1 + 2 * fo / log1p(r_init / (r_init + del_r)))
+free_coef[0][0] = (2 * d_tau * alfa / (ro_F * c_F * del_x)) + \
+                  (2 * a_F * d_tau / del_x ** 2) + \
+                  (8.0 / 5 * a_F * d_tau / (del_r ** 2 * log1p(0.5))) + \
+                   1
+"""
+Continue from here
+"""
+
 free_coef[0][1] = (-2) * fo / log1p(r_init / (r_init + del_r))
 
 for i in range(1, n-1):
