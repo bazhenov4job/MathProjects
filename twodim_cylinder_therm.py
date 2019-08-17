@@ -32,6 +32,7 @@ Q_heat - тепловой поток приносится нагревателе
 """Автор Баженов Вадим, email: bazhenov4job@gmail.com"""
 
 
+
 # Задаём теплофизические свойства материалов
 # Медь
 c_Cu = 400  # Дж/ кг*К
@@ -47,7 +48,8 @@ lam_F = 0.25  # Вт/ м*К
 
 a_F = lam_F / (ro_F * c_F)
 
-alfa = 400  #Вт/ м2*к
+t_N2 = 76  # К - температура азота
+alfa = 400  # Вт/ м2*к
 t_init = 293  # К
 
 # Задаём плотность тепловых потоков
@@ -75,11 +77,6 @@ d_tau = 1
 # Начальное распределение
 temps = [t_init for i in range(nodes)]
 
-
-
-# Вычисляем основную часть "критерия Фурье"
-fo = d_tau * lam / (ro * c * del_r)
-
 # Создаём матрицу левой части
 free_coef = [[0 for i in range(nodes)] for i in range(nodes)]
 
@@ -87,19 +84,29 @@ free_coef[0][0] = (2 * d_tau * alfa / (ro_F * c_F * del_x)) + \
                   (2 * a_F * d_tau / del_x ** 2) + \
                   (8.0 / 5 * a_F * d_tau / (del_r ** 2 * log1p(0.5))) + \
                    1
+free_coef[0][1] = (-1) * 8.0 / 5 * a_F * d_tau / (del_r ** 2 * log1p(0.5))
+free_coef[0][r_n] = (-1) * 2 * a_F * d_tau / (del_x ** 2)
+
+"""
+1. Уравнения для узлов на фторопласте, который граничит с азотом
+"""
+for i in range(1, int((r_f / del_r)) - 1):
+    # Находим текущую величину радиуса n-го узла
+    r_cur = del_r * (i + 1)
+    free_coef[i][i-1] = (-1) * a_F * d_tau / (log1p(r_cur / (r_cur - del_r)) * r_cur * del_r)
+    free_coef[i][i] = (a_F * d_tau / (log1p(r_cur / (r_cur - del_r)) * r_f * del_r)) + \
+                      (a_F * d_tau / log1p(r_cur / (r_cur + del_r))) + \
+                      (a_F * 2 * d_tau / del_x ** 2) + \
+                      (alfa * 2 * d_tau / (ro_F * c_F * del_x)) + 1
+    free_coef[i][i+1] = (-1) * a_F * d_tau / (log1p(r_cur / (r_cur + del_r)) * r_cur * del_r)
+    free_coef[i][i+r_n] = (-1) * 2 * a_F * d_tau / del_x ** 2
+
+"""
+2. Уравнение для узла на стыке фторопласт-медь на нижней поверхности цилиндра
+"""
 """
 Continue from here
 """
-
-free_coef[0][1] = (-2) * fo / log1p(r_init / (r_init + del_r))
-
-for i in range(1, n-1):
-    # Находим текущую величину радиуса n-го узла
-    r_cur = r_init + del_r * i
-    free_coef[i][i-1] = (-1) * fo / log1p(r_cur / (r_cur - del_r))
-    free_coef[i][i] = (fo * (1 / log1p(r_cur / (r_cur - del_r)) +
-                             1 / log1p(r_cur / (r_cur + del_r))) + 1)
-    free_coef[i][i+1] = (-1) * fo / log1p(r_cur / (r_cur + del_r))
 
 free_coef[n-1][n-2] = (-2) * fo / log1p(r_final / (r_final - del_r))
 free_coef[n-1][n-1] = 2 * fo / log1p(r_final / (r_final - del_r)) + 1
